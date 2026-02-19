@@ -71,6 +71,12 @@
                            @input="setProvider(p.key, 'apiBase', $event.target.value)"
                            :placeholder="p.basePlaceholder || 'Optional'">
                   </div>
+                  <div x-show="p.key === 'custom'">
+                    <label class="block text-xs text-gray-500 mb-1">Model (Agent Default)</label>
+                    <input type="text" class="w-full bg-gray-100 border border-gray-300 dark:bg-gray-800 dark:border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                           x-model="config.agents.defaults.model"
+                           placeholder="kimi-for-coding">
+                  </div>
                 </div>
               </div>
             </template>
