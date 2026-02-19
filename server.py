@@ -24,7 +24,6 @@ from starlette.routing import Route
 from starlette.templating import Jinja2Templates
 
 from nanobot.config.loader import (
-    convert_keys,
     convert_to_camel,
     load_config,
     save_config,
@@ -42,6 +41,34 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
 if not ADMIN_PASSWORD:
     ADMIN_PASSWORD = secrets.token_urlsafe(16)
     print(f"Generated admin password: {ADMIN_PASSWORD}")
+
+
+try:
+    # Older nanobot versions expose convert_keys.
+    from nanobot.config.loader import convert_keys as _nanobot_convert_keys
+except ImportError:
+    try:
+        # Newer versions may expose convert_to_snake instead.
+        from nanobot.config.loader import convert_to_snake as _nanobot_convert_keys
+    except ImportError:
+        _nanobot_convert_keys = None
+
+
+def _to_snake_case(value: str) -> str:
+    step1 = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", value)
+    return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", step1).lower()
+
+
+def convert_keys(data):
+    if _nanobot_convert_keys:
+        return _nanobot_convert_keys(data)
+
+    # Fallback for future loader API changes.
+    if isinstance(data, dict):
+        return {_to_snake_case(k): convert_keys(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_keys(item) for item in data]
+    return data
 
 
 class BasicAuthBackend(AuthenticationBackend):

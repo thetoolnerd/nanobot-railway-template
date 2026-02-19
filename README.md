@@ -76,3 +76,15 @@ Anthropic, OpenAI, OpenRouter, DeepSeek, Groq, Gemini, Zhipu, vLLM
 ## Supported Channels
 
 Telegram, WhatsApp (via bridge), Feishu/Lark
+
+## Staying on Latest Nanobot Safely
+
+This template installs `nanobot-ai` from the latest release by default.
+
+To avoid production breakage while staying current:
+
+1. Keep the `Latest Nanobot Smoke Test` GitHub Action enabled (runs every 12 hours).
+2. Connect a staging Railway service to this repo and deploy from `main`.
+3. Promote to production only after staging health checks pass.
+
+The app includes a compatibility shim for nanobot config key conversion, so loader API renames (for example, `convert_keys` to `convert_to_snake`) do not crash startup.

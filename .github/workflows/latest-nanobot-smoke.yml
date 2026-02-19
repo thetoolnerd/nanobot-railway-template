@@ -1,0 +1,46 @@
+name: Latest Nanobot Smoke Test
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt nanobot-ai
+
+      - name: Import and conversion smoke test
+        run: |
+          python - <<'PY'
+          from server import convert_keys
+
+          sample = {
+              "apiKey": "redacted",
+              "agentDefaults": {"workspacePath": "/tmp/workspace"},
+              "nestedList": [{"modelName": "gpt-4.1"}],
+          }
+          result = convert_keys(sample)
+
+          assert isinstance(result, dict)
+          assert "api_key" in result
+          assert "agent_defaults" in result
+          assert "workspace_path" in result["agent_defaults"]
+          assert "nested_list" in result
+          assert "model_name" in result["nested_list"][0]
+          print("smoke test passed")
+          PY
