@@ -23,11 +23,7 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.templating import Jinja2Templates
 
-from nanobot.config.loader import (
-    convert_to_camel,
-    load_config,
-    save_config,
-)
+from nanobot.config import loader as config_loader
 from nanobot.config.schema import Config
 
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
@@ -44,19 +40,28 @@ if not ADMIN_PASSWORD:
 
 
 try:
-    # Older nanobot versions expose convert_keys.
-    from nanobot.config.loader import convert_keys as _nanobot_convert_keys
-except ImportError:
-    try:
-        # Newer versions may expose convert_to_snake instead.
-        from nanobot.config.loader import convert_to_snake as _nanobot_convert_keys
-    except ImportError:
-        _nanobot_convert_keys = None
+    load_config = config_loader.load_config
+    save_config = config_loader.save_config
+except AttributeError as exc:
+    raise RuntimeError("nanobot config loader no longer exposes load/save APIs") from exc
+
+_nanobot_convert_keys = getattr(config_loader, "convert_keys", None)
+if _nanobot_convert_keys is None:
+    _nanobot_convert_keys = getattr(config_loader, "convert_to_snake", None)
+
+_nanobot_convert_to_camel = getattr(config_loader, "convert_to_camel", None)
 
 
 def _to_snake_case(value: str) -> str:
     step1 = re.sub(r"([A-Z]+)([A-Z][a-z])", r"\1_\2", value)
     return re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", step1).lower()
+
+
+def _to_camel_case(value: str) -> str:
+    parts = value.split("_")
+    if not parts:
+        return value
+    return parts[0] + "".join(part[:1].upper() + part[1:] for part in parts[1:])
 
 
 def convert_keys(data):
@@ -68,6 +73,17 @@ def convert_keys(data):
         return {_to_snake_case(k): convert_keys(v) for k, v in data.items()}
     if isinstance(data, list):
         return [convert_keys(item) for item in data]
+    return data
+
+
+def convert_to_camel(data):
+    if _nanobot_convert_to_camel:
+        return _nanobot_convert_to_camel(data)
+
+    if isinstance(data, dict):
+        return {_to_camel_case(k): convert_to_camel(v) for k, v in data.items()}
+    if isinstance(data, list):
+        return [convert_to_camel(item) for item in data]
     return data
 
 
