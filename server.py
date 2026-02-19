@@ -230,7 +230,9 @@ def merge_secrets(new_data, existing_data):
     if isinstance(new_data, dict) and isinstance(existing_data, dict):
         result = {}
         for k, v in new_data.items():
-            if k in SECRET_FIELDS and isinstance(v, str) and (v.endswith("***") or v == ""):
+            # Preserve existing secret only when UI sends a masked placeholder.
+            # Empty string means user intentionally cleared the value.
+            if k in SECRET_FIELDS and isinstance(v, str) and v.endswith("***"):
                 result[k] = existing_data.get(k, "")
             else:
                 result[k] = merge_secrets(v, existing_data.get(k, {}))
