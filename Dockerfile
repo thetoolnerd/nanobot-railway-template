@@ -11,6 +11,8 @@ RUN apt-get update && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
+RUN npm install -g @openai/codex @anthropic-ai/claude-code
+
 COPY requirements.txt /app/requirements.txt
 RUN uv pip install --system --no-cache nanobot-ai -r /app/requirements.txt
 
@@ -22,6 +24,7 @@ COPY start.sh /app/start.sh
 RUN chmod +x /app/start.sh
 
 ENV HOME=/data
+ENV CODEX_HOME=/data/.codex
 ENV NANOBOT_AGENTS__DEFAULTS__WORKSPACE=/data/.nanobot/workspace
 
 CMD ["/app/start.sh"]

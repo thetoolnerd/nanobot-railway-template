@@ -11,6 +11,7 @@ One-click deploy [nanobot](https://github.com/nano-bot/nanobot) on [Railway](htt
 - **Gateway Management** — start, stop, and restart the nanobot gateway from the UI
 - **Basic Auth** — password-protected admin panel
 - **Persistent Storage** — config and data survive container restarts via Railway volume
+- **Preinstalled Coding CLIs** — `codex` and `claude` are installed in the container
 
 ## Quick Start
 
@@ -39,6 +40,15 @@ Open `http://localhost:8080` and log in with `admin` / `changeme`.
 | `PORT` | `8080` | Web server port |
 | `ADMIN_USERNAME` | `admin` | Basic auth username |
 | `ADMIN_PASSWORD` | *(generated)* | Basic auth password. If unset, a random password is generated and printed to stdout |
+| `OPENAI_API_KEY` | *(unset)* | API key for Codex CLI. If set, Codex uses API-key auth (no browser login) |
+| `OPENAI_BASE_URL` | `https://api.openai.com/v1` | Base URL for Codex CLI. Override this to an OpenAI-compatible endpoint when needed |
+| `KIMI_API_KEY` | *(unset)* | Optional Kimi API key. Used for Claude (Anthropic-compatible). For Codex, it is used only when `OPENAI_BASE_URL` is explicitly set to Kimi and `OPENAI_API_KEY` is unset |
+| `ANTHROPIC_API_KEY` | *(unset)* | API key for Claude Code. If unset and `KIMI_API_KEY` exists, startup uses the Kimi key |
+| `ANTHROPIC_BASE_URL` | *(auto when using Kimi)* | Base URL for Claude Code. Defaults to `https://api.kimi.com/coding/` when `KIMI_API_KEY` is used |
+
+Startup also seeds:
+- `/data/.claude.json` with onboarding completed
+- `/data/.codex/config.toml` with API-only auth preference
 
 Nanobot config can also be set via environment variables with the `NANOBOT_` prefix (e.g. `NANOBOT_PROVIDERS__ANTHROPIC__API_KEY`), but the web UI is the recommended way to manage configuration.
 
